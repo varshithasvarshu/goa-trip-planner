@@ -1,37 +1,47 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
 
 const App = () => {
+  const [query, setQuery] = useState("");
   const [tripPlan, setTripPlan] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const generateTripPlan = async () => {
-    setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
     try {
-      const response = await axios.post("http://localhost:5000/api/generate-trip");
-      const data = response.data;
+      const res = await fetch("http://localhost:5000/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+      const data = await res.json();
       setTripPlan(data);
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to generate trip plan.");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError("Failed to get trip plan.");
     }
   };
 
   return (
-    <div style={{ padding: '30px', fontFamily: 'Arial' }}>
-      <h2>🌴 Goa Trip Planner</h2>
-      <button
-        onClick={generateTripPlan}
-        style={{ padding: '10px 20px' }}
-        disabled={loading}
-      >
-        {loading ? 'Planning...' : 'Generate Plan'}
-      </button>
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h2>City Trip Planner</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={query}
+          placeholder="e.g., I want to go to Delhi for 5 days"
+          onChange={(e) => setQuery(e.target.value)}
+          style={{ width: "400px", padding: "10px" }}
+        />
+        <button type="submit" style={{ padding: "10px 20px", marginLeft: "10px" }}>
+          Get Plan
+        </button>
+      </form>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
       {tripPlan && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>🗺️ Trip Plan:</h3>
+        <div style={{ marginTop: "20px" }}>
+          <h3>Your Trip Plan:</h3>
           <pre>{JSON.stringify(tripPlan, null, 2)}</pre>
         </div>
       )}
